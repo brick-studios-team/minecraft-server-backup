@@ -12,20 +12,34 @@ for folder in "$BASE_FOLDER"/*; do
     # Navigate to the subfolder
     cd "$folder" || exit
 
-    # Initialize Git repository
-    git init
+    # Check if the repository already exists
+    REPO_NAME=$(basename "$folder")
+    gh repo view "aservers/$REPO_NAME" &> /dev/null
+    REPO_EXISTS=$?
 
-    # Add all files to the repository
-    git add .
+    if [ $REPO_EXISTS -eq 0 ]; then
+      echo "Repository already exists: aservers/$REPO_NAME"
+    else
+      # Initialize Git repository
+      git init
 
-    # Commit the changes
-    git commit -m "initial commit"
+      # Add all files to the repository
+      git add .
 
-    # Add remote origin
-    git remote add origin "https://github.com/aservers/$(basename "$folder")"
+      # Commit the changes
+      git commit -m "initial commit"
 
-    # Push to the remote repository
-    git push -u origin master
+      # Create the remote repository
+      gh repo create "aservers/$REPO_NAME" --public --confirm
+
+      # Set the remote origin
+      git remote add origin "https://github.com/aservers/$REPO_NAME"
+
+      # Push to the remote repository
+      git push -u origin master
+
+      echo "Repository created: aservers/$REPO_NAME"
+    fi
 
     # Go back to the base folder
     cd "$BASE_FOLDER" || exit
