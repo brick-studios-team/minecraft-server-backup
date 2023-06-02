@@ -12,14 +12,22 @@ for folder in "$BASE_FOLDER"/*; do
     # Navigate to the subfolder
     cd "$folder" || exit
 
-    # Check if the repository already exists
+    # Get the folder name and convert it to lowercase
     REPO_NAME=$(basename "$folder")
-    gh repo view "aservers/$REPO_NAME" &> /dev/null
+    LOWERCASE_NAME=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]')
+
+    # Check if the repository already exists
+    gh repo view "aservers/$LOWERCASE_NAME" &> /dev/null
     REPO_EXISTS=$?
 
     if [ $REPO_EXISTS -eq 0 ]; then
-      echo "Repository already exists: aservers/$REPO_NAME"
+      echo "Repository already exists: aservers/$LOWERCASE_NAME"
     else
+      # Add a hyphen if the name contains lowercase letters
+      if [[ "$REPO_NAME" != "$LOWERCASE_NAME" ]]; then
+        LOWERCASE_NAME="$LOWERCASE_NAME-"
+      fi
+
       # Initialize Git repository
       git init
 
@@ -30,15 +38,15 @@ for folder in "$BASE_FOLDER"/*; do
       git commit -m "initial commit"
 
       # Create the remote repository
-      gh repo create "aservers/$REPO_NAME" --public --confirm
+      gh repo create "aservers/$LOWERCASE_NAME$REPO_NAME" --public --confirm
 
       # Set the remote origin
-      git remote add origin "https://github.com/aservers/$REPO_NAME"
+      git remote add origin "https://github.com/aservers/$LOWERCASE_NAME$REPO_NAME"
 
       # Push to the remote repository
       git push -u origin master
 
-      echo "Repository created: aservers/$REPO_NAME"
+      echo "Repository created: aservers/$LOWERCASE_NAME$REPO_NAME"
     fi
 
     # Go back to the base folder
